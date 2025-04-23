@@ -4,6 +4,7 @@ import json
 import uuid
 import time
 from pathlib import Path
+from .rest_busqueda_estaciones_mapa import get_data_rest_busqueda_estaciones_mapa
 
 URL_XLS = "https://geoportalgasolineras.es/geoportal/resources/files/preciosEESS_es.xls"
 RETRIES = 4
@@ -48,9 +49,8 @@ def generate_json_from_xls():
 
     df_filtrado.to_json('filtrado_gases.json', orient='records', force_ascii=False, indent=2)
 
-    print(f"Se guardaron {len(df_filtrado)} filas en 'filtrado_gases.json'")
-
 def generate_geojson_data():
+    data_img = data = get_data_rest_busqueda_estaciones_mapa()
     with open('filtrado_gases.json', 'r', encoding='utf-8') as f:
         data = json.load(f)
     
@@ -59,6 +59,8 @@ def generate_geojson_data():
         if estacion.get("Tipo venta") != "P":
             continue
         
+        img_logo = get_imagenEESS_by_coord(data_img, (float(estacion["Longitud"].replace(',', '.')), float(estacion["Latitud"].replace(',', '.'))))
+
         feature = {
             "type": "Feature",
             "geometry": {
@@ -77,6 +79,7 @@ def generate_geojson_data():
                 "localidad": estacion.get("Localidad"),
                 "provincia": estacion.get("Provincia"),
                 "horario": estacion.get("Horario"),
+                "imagenEESS": img_logo.split("//")[-1],
                 # Coordenadas
                 "coordenadaX": float(estacion["Longitud"].replace(',', '.')),
                 "coordenadaY": float(estacion["Latitud"].replace(',', '.')),
@@ -103,5 +106,11 @@ def generate_geosjon_from_xls():
 
     print("GeoJSON file generated successfully.")
 
-
-
+def get_imagenEESS_by_coord(data, coord):
+    """
+    Get the image URL for a given coordinate.
+    """
+    for estacion in data["estaciones"]["listaEstaciones"]:
+        if (estacion["coordenadaX_dec"] == coord[0] and estacion["coordenadaY_dec"] == coord[1]):
+            return estacion["imagenEESS"]
+    return None

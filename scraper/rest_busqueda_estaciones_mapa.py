@@ -32,8 +32,10 @@ def get_data():
         "Content-Type": "application/json"
     }
 
-    response = requests.post(URL, headers=headers, json=PAYLOAD)
+    print("Fetching data from API...")
+    response = requests.post(URL, headers=headers, json=PAYLOAD, timeout=5)
     data = response.json()
+    print("Data fetched successfully.")
 
     return data
 
