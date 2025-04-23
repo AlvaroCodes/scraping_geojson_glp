@@ -1,10 +1,12 @@
 name: 📅 Actualizar datos GLP
 
+# Dar permiso de escritura al GITHUB_TOKEN para poder hacer push
+permissions:
+  contents: write
+
 on:
-  # Ejecutar cada día a las 00:00 UTC (ajusta cron si necesitas hora local)
   schedule:
-    - cron: '0 0 * * *'                # diario a medianoche UTC :contentReference[oaicite:2]{index=2}
-  # Permite disparar manualmente desde la pestaña Actions
+    - cron: '0 0 * * *'                # diario a medianoche UTC
   workflow_dispatch:
 
 jobs:
@@ -15,7 +17,7 @@ jobs:
       - name: Checkout del repositorio
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0               # necesario para push :contentReference[oaicite:3]{index=3}
+          fetch-depth: 0
 
       - name: Configurar Python
         uses: actions/setup-python@v4
@@ -35,7 +37,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add data/gasolineras-glp.geojson
-          # Solo commitear si hay cambios
           git diff --staged --quiet || git commit -m "🔄 Actualización diaria de datos GLP"
-          # Push y, si no hay nada que push, no fallar
           git push || echo "Sin cambios para pushear"
